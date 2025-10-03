@@ -6,6 +6,8 @@ def compute_a(node_num,k,d,q):
 
     assert(d[0]==0)
     assert(node_num==len(d))
+    for i in range(len(d)):
+        assert(d[i]<=q)
     #n+1*n+1 variables of x
     #log(q) variables for each y, (n+1) y variables
     #log(k) slack variables for (13)
@@ -110,6 +112,8 @@ def compute_b(node_num,k,d,q):
     
     assert(d[0]==0)
     assert(node_num==len(d))
+    for i in range(len(d)):
+        assert(d[i]<=q)
 
     n=node_num+1
     d.append(d[0])
