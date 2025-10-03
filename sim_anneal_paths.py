@@ -1,0 +1,68 @@
+import numpy as np
+import pandas as pd
+import dimod
+import neal
+
+
+def get_feasible(A, b, samples=10000):
+
+    AA = np.dot(A.T, A)
+    h = -2.0*np.dot(b.T, A)
+    print(h)
+    Q = AA + np.diag(h)
+    offset = np.dot(b.T, b) + 0.0
+    bqm_model = dimod.BinaryQuadraticModel.from_numpy_matrix(mat=Q, offset=offset)
+    simAnnSampler = neal.SimulatedAnnealingSampler()
+    sampler = simAnnSampler
+    response = sampler.sample(bqm_model, num_reads=samples)
+    response = response.aggregate()
+    with open("raw_sols.txt", "w") as f:
+        f.write(str(response.record)) # Add a newline character for each item
+    filter_idx = [i for i, e in enumerate(response.record.energy) if e == 0.0]
+    feas_sols = response.record.sample[filter_idx]
+    # feas_sols_clean = clean_cycles(feas_sols[:, 0:(2*data_edges_dir.shape[0])], edges, nodes, edges, label_exits, node_demand_i)
+    # feas_sols_clean_uniq = np.unique(feas_sols_clean, axis=0)
+    # print(feas_sols.shape, feas_sols_clean.shape, feas_sols_clean_uniq.shape)
+
+    # solver_greedy = SteepestDescentSolver()
+    # DWaveSamples_g = solver_greedy.sample(bqm_model, initial_states=DWaveSamples)
+    # response = DWaveSamples_g.aggregate()
+    # filter_idx = [i for i, e in enumerate(response.record.energy) if e == 0.0]
+    # feas_sols = response.record.sample[filter_idx]
+    # feas_sols_clean = clean_cycles(feas_sols[:, 0:(2*data_edges_dir.shape[0])], edges, nodes, edges, label_exits, node_demand_i)
+    # feas_sols_clean_uniq = np.unique(feas_sols_clean, axis=0)
+    # print(feas_sols.shape, feas_sols_clean.shape, feas_sols_clean_uniq.shape)
+
+    # feas_times = np.matmul(feas_sols_clean_uniq, tij_edges_undir)
+    # feas_sols_sorted = feas_sols_clean_uniq[np.argsort(feas_times)[0:100]]
+    # print(feas_sols_sorted.shape)
+    # t_fin = time.time()
+    # sols_SA_time[i_demand] = t_fin - t_ini
+    np.savetxt('feas_sols_sorted_.txt', feas_sols)
+
+
+
+def get_feasible_encode(A, b, E, L, sampler, samples=20):
+
+    Q_I = np.dot(A.T, A)
+    h = 2.0*np.dot(np.dot(L.T, Q_I) - np.dot(b.T, A), E)
+    Q = np.dot(E.T, np.dot(Q_I, E)) + np.diag(h[0])
+    offset = np.dot(L.T, np.dot(Q_I, L)) + np.dot(b.T, b) - 2.0*np.dot(b.T, np.dot(A, L))
+
+    # Define Binary Quadratic Model
+    bqm = dimod.BinaryQuadraticModel.from_numpy_matrix(mat=Q, offset=offset)
+
+    response = sampler.sample(bqm, num_reads=samples)
+
+    response = response.aggregate()
+
+    filter_idx = [i for i, e in enumerate(response.record.energy) if e == 0.0]
+
+    feas_sols_X = response.record.sample[filter_idx]
+
+    print(L.shape, E.shape, feas_sols_X.shape)
+    feas_sols = (L + np.dot(E, feas_sols_X.T)).T
+
+    return feas_sols_X, feas_sols, Q_I, h, Q, offset
+
+
