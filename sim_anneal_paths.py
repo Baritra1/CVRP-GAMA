@@ -4,7 +4,7 @@ import dimod
 import neal
 
 
-def get_feasible(A, b, samples=10000):
+def get_feasible(A, b, samples=20000):
 
     AA = np.dot(A.T, A)
     h = -2.0*np.dot(b.T, A)
@@ -21,24 +21,9 @@ def get_feasible(A, b, samples=10000):
     filter_idx = [i for i, e in enumerate(response.record.energy) if e == 0.0]
     feas_sols = response.record.sample[filter_idx]
     # feas_sols_clean = clean_cycles(feas_sols[:, 0:(2*data_edges_dir.shape[0])], edges, nodes, edges, label_exits, node_demand_i)
-    # feas_sols_clean_uniq = np.unique(feas_sols_clean, axis=0)
+    feas_sols_uniq = np.unique(feas_sols, axis=0)
     # print(feas_sols.shape, feas_sols_clean.shape, feas_sols_clean_uniq.shape)
-
-    # solver_greedy = SteepestDescentSolver()
-    # DWaveSamples_g = solver_greedy.sample(bqm_model, initial_states=DWaveSamples)
-    # response = DWaveSamples_g.aggregate()
-    # filter_idx = [i for i, e in enumerate(response.record.energy) if e == 0.0]
-    # feas_sols = response.record.sample[filter_idx]
-    # feas_sols_clean = clean_cycles(feas_sols[:, 0:(2*data_edges_dir.shape[0])], edges, nodes, edges, label_exits, node_demand_i)
-    # feas_sols_clean_uniq = np.unique(feas_sols_clean, axis=0)
-    # print(feas_sols.shape, feas_sols_clean.shape, feas_sols_clean_uniq.shape)
-
-    # feas_times = np.matmul(feas_sols_clean_uniq, tij_edges_undir)
-    # feas_sols_sorted = feas_sols_clean_uniq[np.argsort(feas_times)[0:100]]
-    # print(feas_sols_sorted.shape)
-    # t_fin = time.time()
-    # sols_SA_time[i_demand] = t_fin - t_ini
-    np.savetxt('feas_sols_sorted_.txt', feas_sols)
+    np.savetxt('feas_sols_sorted_.txt', feas_sols_uniq)
 
 
 

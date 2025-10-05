@@ -35,5 +35,6 @@ y_j-y_i-(d_j+Q)\*x_ij+Q>=0
 y_j-y_i-(d_j+Q)\*x_ij+Q-S=0
 
 y_j-y_i-(d_j+Q)\*x_ij-S=-Q
+0-22-()*0-13=-Q
 
-LHS i think is bounded by 2Q so we need n\*(n-1)(log(Q)+1)
+LHS-RHS i think is bounded by 2Q so we need n\*(n-1)(log(Q)+1)

@@ -1,21 +1,52 @@
-arr=  [0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0]
+import sys
+import argparse
 
-print("x_0j ",arr[0:4])
-print("x_1j ",arr[4:8])
-print("x_2j ",arr[8:12])
-print("y_0",arr[12:17])
-print("y_1",arr[17:22])
-print("y_2",arr[22:27])
-print("y_3",arr[27:32])
-print("S_13",arr[32:35])
-a=35
-for i in range(4):
-    print("S_15u",arr[a:a+5])
-    a+=5
-for i in range(2):
-    print("S_15l",arr[a:a+5])
-    a+=5
-for i in range(12):
-    print("S_14",arr[a:a+6])
-    a+=6
-print(arr[a:])
+n=4
+k=4
+q=24
+
+def parse_and_print(n,k,q,arr):
+    a=0
+    for i in range(n):
+        print(f"x_{i}j",arr[a:a+n+1])
+        a+=n+1
+
+    for i in range(1,n):
+        print(f"y_{i}",arr[a:a+q.bit_length()])
+        a+=q.bit_length()
+    print("S_13",arr[a:a+k.bit_length()])
+    a+=k.bit_length()
+    for i in range(n-1):
+        print("S_15u",arr[a:a+q.bit_length()])
+        a+=q.bit_length()
+
+    for i in range(n-1):
+        print("S_15l",arr[a:a+q.bit_length()])
+        a+=q.bit_length()
+
+    for i in range(n*n-n):
+        print("S_14",arr[a:a+q.bit_length()+1])
+        a+=q.bit_length()+1
+    print(arr[a:])
+    print(len(arr))
+
+if  __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-n', type=int, help='number of nodes in graph')
+    parser.add_argument('-k', type=int, help='number of vehicles in fleet')
+    parser.add_argument('-q', type=int, help='max capacity of vehicle')
+    parser.add_argument('-arr',type=lambda s: [int(x.strip()) for x in s.split(',') if x.strip()], default=None, help='solution,should be csv enclosed with double quotations')
+    
+    args = parser.parse_args()
+    n=args.n
+    k=args.k 
+    q=args.q 
+    arr=args.arr
+    parse_and_print(n,k,q,arr)
+
+# arr = "0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0"
+# n = 4
+# k = 4
+# q = 24
+#valid solution for testing
