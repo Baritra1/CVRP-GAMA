@@ -22,7 +22,7 @@ All vehicles start and end at depot, so (i=0 and i=n+1 represent depot)
 Notably, each vertex can be visited only once across all vehicles 
 Note:d_i<=q 
 
-Rewrite 14
+Rewrite (14)
 
 y_j>=y_i+d_j\*x_ij-Q(1-x_ij)
 
@@ -35,6 +35,5 @@ y_j-y_i-(d_j+Q)\*x_ij+Q>=0
 y_j-y_i-(d_j+Q)\*x_ij+Q-S=0
 
 y_j-y_i-(d_j+Q)\*x_ij-S=-Q
-0-22-()*0-13=-Q
 
 LHS-RHS i think is bounded by 2Q so we need n\*(n-1)(log(Q)+1)

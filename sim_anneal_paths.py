@@ -1,3 +1,4 @@
+#adapted from https://doi.org/10.1287/ijoc.2024.0574.cd
 import numpy as np
 import pandas as pd
 import dimod
@@ -16,14 +17,14 @@ def get_feasible(A, b, samples=20000):
     sampler = simAnnSampler
     response = sampler.sample(bqm_model, num_reads=samples)
     response = response.aggregate()
-    with open("raw_sols.txt", "w") as f:
+    with open("data/raw_sols.txt", "w") as f:
         f.write(str(response.record)) # Add a newline character for each item
     filter_idx = [i for i, e in enumerate(response.record.energy) if e == 0.0]
     feas_sols = response.record.sample[filter_idx]
+    #TODO: Check if this was necessary
     # feas_sols_clean = clean_cycles(feas_sols[:, 0:(2*data_edges_dir.shape[0])], edges, nodes, edges, label_exits, node_demand_i)
     feas_sols_uniq = np.unique(feas_sols, axis=0)
-    # print(feas_sols.shape, feas_sols_clean.shape, feas_sols_clean_uniq.shape)
-    np.savetxt('feas_sols_sorted_.txt', feas_sols_uniq)
+    np.savetxt('data/feas_sols_sorted_.txt', feas_sols_uniq)
 
 
 
