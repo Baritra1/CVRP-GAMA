@@ -4,14 +4,33 @@ import pandas as pd
 import dimod
 import neal
 
+#check for subtours or vehicle taking more than capacity
+#this is implemented in python because computing the graver basis is more of a bottleneck than this but I 
+#could easily port to cpp if I find this starts taking too long for larger n
+def check_possible(feas_sol,n,x,cum_demand,q,d):
+    sum_visited=0
+    if cum_demand>q:
+        return sum_visited+1,False
+    for i in range(n+1):
+        if(i==n):
+            return sum_visited+1,True
+        if(feas_sol[x*(n+1)+i]==1):
+            new_visit,poss = check_possible(feas_sol,n,i,cum_demand+d[i],q,d)
+            sum_visited+=new_visit
+            if(poss==False):
+               return sum_visited+1,False    
+    return sum_visited+1,True
+                        
 
-def get_feasible(A, b, n, samples=20000):
+
+def get_feasible(A, b, n, q,d,samples=20000):
 
     AA = np.dot(A.T, A)
     h = -2.0*np.dot(b.T, A)
-    print(h)
     Q = AA + np.diag(h)
     offset = np.dot(b.T, b) + 0.0
+    # Q*=1/1000
+    # print(Q)
     bqm_model = dimod.BinaryQuadraticModel.from_numpy_matrix(mat=Q, offset=offset)
     simAnnSampler = neal.SimulatedAnnealingSampler()
     sampler = simAnnSampler
@@ -21,11 +40,16 @@ def get_feasible(A, b, n, samples=20000):
         f.write(str(response.record)) # Add a newline character for each item
     filter_idx = [i for i, e in enumerate(response.record.energy) if e == 0.0]
     feas_sols = response.record.sample[filter_idx]
-    #TODO: Check if this was necessary
-    feas_sols_clean=[]
+    feas_sols_filter=[]
+    print(len(feas_sols))
     for i in feas_sols:
+        visited,poss=check_possible(i,n,0,0,q,d)
+        if(poss and visited==n):
+            feas_sols_filter.append(i)
+    print(len(feas_sols_filter))
+    feas_sols_clean=[]
+    for i in feas_sols_filter:
         feas_sols_clean.append(i[:n*n+n])
-    print(feas_sols_clean)
     feas_sols_uniq = np.unique(feas_sols_clean, axis=0)
     np.savetxt('data/feas_sols_sorted_2.txt', feas_sols_uniq)
 

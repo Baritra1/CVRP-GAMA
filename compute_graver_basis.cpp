@@ -5,8 +5,13 @@
 #include <algorithm>
 #include <random>
 #include <sstream>
+#include <mutex>
 #include <unordered_set>
 #include <omp.h>
+#include <chrono>
+#include <algorithm>
+#include <execution>
+
 
 
 using namespace std;
@@ -75,26 +80,20 @@ bool vec_zero(const vector<int8_t>& a, double eps = 1e-9) {
     return true;
 }
 
-vector<vector<int8_t>> filter_uniquex(vector<vector<int8_t>>& feas_sols){
-   unordered_set<string> seen;
-    vector<vector<int8_t>> unique_rows;
-    for (const auto& row : feas_sols) {
-        // Build uniqueness key from first n^2 + n columns
-        string key;
-        for (int i = 0;i < (int)row.size(); ++i)
-            key.push_back(static_cast<char>(row[i]));
-
-        // Insert if unique
-        if (seen.insert(key).second) {
-            unique_rows.push_back(move(row));
-        }
-    }
-
-    return unique_rows;
+std::vector<std::vector<int8_t>> dedup(const std::vector<std::vector<int8_t>>& data) {
+    auto data_copy = data;
+    auto start_time = std::chrono::steady_clock::now();
+    sort(execution::par, data_copy.begin(), data_copy.end());
+    auto last = unique(execution::par, data_copy.begin(), data_copy.end());
+    data_copy.erase(last, data_copy.end());
+    return data_copy;
 }
 
-vector<int8_t> normal_form(vector<int8_t> r_i, const vector<vector<int8_t>>& g_basis) {
-    for (const auto& g_i_chk : g_basis) {
+vector<int8_t> normal_form(vector<int8_t> r_i, const vector<vector<int8_t>>& g_basis, size_t skip_index) {
+    vector<int8_t> res = r_i;
+    for (int i=0;i<g_basis.size();i++) {
+        if(i==skip_index) continue;
+        auto& g_i_chk =g_basis[i];
         bool f_chk1 = true;
         bool f_chk2 = true;
 
@@ -180,13 +179,8 @@ vector<vector<int8_t>> compute_gbasis_par(vector<vector<int8_t>> ker_par) {
         // Parallel computation of normal_form for each row
         #pragma omp parallel for schedule(dynamic)
         for (size_t i = 0; i < n_rows; ++i) {
-            cout<<i<<"\n";
-            vector<vector<int8_t>> g1_i_del;
-            g1_i_del.reserve(n_rows - 1);
-            for (size_t k = 0; k < n_rows; ++k)
-                if (k != i)
-                    g1_i_del.push_back(ker_el_ones_copy[k]);
-            updated_rows[i] = normal_form(ker_el_ones_copy[i], g1_i_del);
+            // cout<<i<<"\n";
+            updated_rows[i] = normal_form(ker_el_ones_copy[i],ker_el_ones_copy, i);
         }
 
         // Sequential update changed rows
@@ -198,8 +192,9 @@ vector<vector<int8_t>> compute_gbasis_par(vector<vector<int8_t>> ker_par) {
                 if (!vec_zero(new_row)) {
                     old_row = new_row;
                     tst1 = true;
-                    cout << "i=" << i << " cc=" << cc << endl;
+                    // cout << "i=" << i << " cc=" << cc << endl;
                 } else {
+                    cout<<"bruhproblem"<<"\n";
                     del_mask[i] = true;
                 }
             }
@@ -216,37 +211,36 @@ vector<vector<int8_t>> compute_gbasis_par(vector<vector<int8_t>> ker_par) {
         cc++;
         cout << "done2" << endl;
     }
-
+    cout<<ker_el_ones_copy.size()<<"\n";
     return ker_el_ones_copy;
 }
+vector<vector<int8_t>> ker_sols;
+vector<vector<int8_t>> ker_sols_uniq;
+auto get_graver_basis(const vector<vector<int8_t>>& fsol_list_reduced, int max_gbasis_size) {
 
-pair<vector<vector<vector<int8_t>>>, vector<vector<int8_t>>> get_graver_basis(const vector<vector<int8_t>>& fsol_list_reduced) {
-    vector<vector<vector<int8_t>>> g_basis_reduced;
-
-    vector<vector<int8_t>> ker_sols = compute_kernel_feas_sols(fsol_list_reduced);
+    ker_sols = compute_kernel_feas_sols(fsol_list_reduced);
 
     // Deduplicate
-    vector<vector<int8_t>> ker_sols_uniq;
-    for (auto& row : ker_sols) {
-        bool found = false;
-        for (auto& r : ker_sols_uniq)
-            if (vec_equal(r, row)) { found = true; break; }
-        if (!found)
-            ker_sols_uniq.push_back(row);
-    }
+    ker_sols_uniq = dedup(ker_sols);
+    vector<vector<int8_t>> slice_ker_sols_uniq;
+
 
     // Shuffle
     random_device rd;
     mt19937 g(rd());
     shuffle(ker_sols_uniq.begin(), ker_sols_uniq.end(), g);
 
-    vector<vector<int8_t>> g_basis_par_i = compute_gbasis_par(ker_sols_uniq);
-    g_basis_reduced.push_back(g_basis_par_i);
-
-    return {g_basis_reduced, g_basis_par_i};
+    for (size_t i = 0; i < min((int)ker_sols_uniq.size(),max_gbasis_size); ++i) {
+        slice_ker_sols_uniq.push_back(ker_sols_uniq[i]);
+    }
+    
+    vector<vector<int8_t>> g_basis_par_i = compute_gbasis_par(slice_ker_sols_uniq);
+    return g_basis_par_i;
 }
 
 int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
     ifstream fin("data/feas_sols_sorted_2.txt");
     vector<vector<int8_t>> feas_solns;
     string line;
@@ -260,19 +254,17 @@ int main() {
         if (!row.empty())
             feas_solns.push_back(row);
     }
-    int n=3;
-    vector<vector<int8_t>> feas_sols_filter=filter_uniquex(feas_solns);
-    auto [gbasis, whatisthis] = get_graver_basis(feas_sols_filter);
-
-    cout << "Final g_basis size: " << whatisthis.size() << " x " 
-         << (whatisthis.empty() ? 0 : whatisthis[0].size()) << endl;
+    int n=11;
+    int max_gbasis_size=100000;
+    auto gbasis = get_graver_basis(feas_solns,max_gbasis_size);
+    cout << "Final g_basis size: " << gbasis.size() << " x " 
+         << (gbasis.empty() ? 0 : gbasis[0].size()) << endl;
 
     ofstream fout("data/graver_basis_test_2.txt");
-    for (auto& row : whatisthis) {
-        for (double v : row)
-            fout << v << " ";
-        fout << "\n";
+    for (const auto& row : gbasis) {
+        fout.write(reinterpret_cast<const char*>(row.data()), row.size());
     }
+    cout<<"you can end this program now (if there are a lot of feas_sols the destructor for feas_sols takes very long)"<<"\n";
     fout.close();
 
     return 0;

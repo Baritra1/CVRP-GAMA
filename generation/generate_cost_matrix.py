@@ -13,7 +13,7 @@ def generate_cost_matrix(n: int, seed: int = None):
     return cost_matrix
 
 if __name__ == "__main__":
-    n = 5
+    n = 11
     output_file = "data/cost_matrix.txt"
     
     C = generate_cost_matrix(n)
