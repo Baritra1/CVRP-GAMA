@@ -1,3 +1,5 @@
+**If running compute_graver_basis.cpp make sure to run with -O3, -ffast-math, -fopenmp, and -march=native for it to work**
+
 VRP Research Notes  
 
 
@@ -37,3 +39,4 @@ y_j-y_i-(d_j+Q)\*x_ij+Q-S=0
 y_j-y_i-(d_j+Q)\*x_ij-S=-Q
 
 LHS-RHS i think is bounded by 2Q so we need n\*(n-1)(log(Q)+1)
+

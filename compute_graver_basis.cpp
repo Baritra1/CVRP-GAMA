@@ -15,7 +15,7 @@ using namespace std;
  * I ported compute_graver_basis.py as found in https://doi.org/10.1287/ijoc.2024.0574.cd from
  * Python to C++, which already makes it significantly faster. Then, I optimized some slow numpy
  * functions to be significantly faster (some stuff I optimized included reducing the number of O(n^2)
- * copies, using some compiler options like -O3 and -ffast-math), and used the fact that the solutions are all either 0 1
+ * copies and using some compiler options like -O3 and -ffast-math), and used the fact that the solutions are all either 0 1
  * or -1 to make the functions work with int8_t, which is significantly faster than numpy working
  * with doubles. Finally, I made another very significant optimization by parallelizing the entirety
  * of compute_kernel_feas_sols() and a large part of compute_gbasis_par() to significantly increase
@@ -73,6 +73,24 @@ bool vec_zero(const vector<int8_t>& a, double eps = 1e-9) {
         if (abs(v) > eps)
             return false;
     return true;
+}
+
+vector<vector<int8_t>> filter_uniquex(vector<vector<int8_t>>& feas_sols){
+   unordered_set<string> seen;
+    vector<vector<int8_t>> unique_rows;
+    for (const auto& row : feas_sols) {
+        // Build uniqueness key from first n^2 + n columns
+        string key;
+        for (int i = 0;i < (int)row.size(); ++i)
+            key.push_back(static_cast<char>(row[i]));
+
+        // Insert if unique
+        if (seen.insert(key).second) {
+            unique_rows.push_back(move(row));
+        }
+    }
+
+    return unique_rows;
 }
 
 vector<int8_t> normal_form(vector<int8_t> r_i, const vector<vector<int8_t>>& g_basis) {
@@ -162,6 +180,7 @@ vector<vector<int8_t>> compute_gbasis_par(vector<vector<int8_t>> ker_par) {
         // Parallel computation of normal_form for each row
         #pragma omp parallel for schedule(dynamic)
         for (size_t i = 0; i < n_rows; ++i) {
+            cout<<i<<"\n";
             vector<vector<int8_t>> g1_i_del;
             g1_i_del.reserve(n_rows - 1);
             for (size_t k = 0; k < n_rows; ++k)
@@ -229,7 +248,7 @@ pair<vector<vector<vector<int8_t>>>, vector<vector<int8_t>>> get_graver_basis(co
 
 int main() {
     ifstream fin("data/feas_sols_sorted_2.txt");
-    vector<vector<int8_t>> feas_sols;
+    vector<vector<int8_t>> feas_solns;
     string line;
 
     while (getline(fin, line)) {
@@ -239,10 +258,11 @@ int main() {
         while (ss >> val)
             row.push_back(val);
         if (!row.empty())
-            feas_sols.push_back(row);
+            feas_solns.push_back(row);
     }
-
-    auto [gbasis, whatisthis] = get_graver_basis(feas_sols);
+    int n=3;
+    vector<vector<int8_t>> feas_sols_filter=filter_uniquex(feas_solns);
+    auto [gbasis, whatisthis] = get_graver_basis(feas_sols_filter);
 
     cout << "Final g_basis size: " << whatisthis.size() << " x " 
          << (whatisthis.empty() ? 0 : whatisthis[0].size()) << endl;
