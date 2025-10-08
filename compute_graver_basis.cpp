@@ -192,9 +192,8 @@ vector<vector<int8_t>> compute_gbasis_par(vector<vector<int8_t>> ker_par) {
                 if (!vec_zero(new_row)) {
                     old_row = new_row;
                     tst1 = true;
-                    // cout << "i=" << i << " cc=" << cc << endl;
+                    cout << "i=" << i << " cc=" << cc << endl;
                 } else {
-                    cout<<"bruhproblem"<<"\n";
                     del_mask[i] = true;
                 }
             }
@@ -216,7 +215,7 @@ vector<vector<int8_t>> compute_gbasis_par(vector<vector<int8_t>> ker_par) {
 }
 vector<vector<int8_t>> ker_sols;
 vector<vector<int8_t>> ker_sols_uniq;
-auto get_graver_basis(const vector<vector<int8_t>>& fsol_list_reduced, int max_gbasis_size) {
+auto get_graver_basis(const vector<vector<int8_t>>& fsol_list_reduced, long long max_gbasis_size) {
 
     ker_sols = compute_kernel_feas_sols(fsol_list_reduced);
 
@@ -230,7 +229,7 @@ auto get_graver_basis(const vector<vector<int8_t>>& fsol_list_reduced, int max_g
     mt19937 g(rd());
     shuffle(ker_sols_uniq.begin(), ker_sols_uniq.end(), g);
 
-    for (size_t i = 0; i < min((int)ker_sols_uniq.size(),max_gbasis_size); ++i) {
+    for (size_t i = 0; i < min((long long)ker_sols_uniq.size(),max_gbasis_size); ++i) {
         slice_ker_sols_uniq.push_back(ker_sols_uniq[i]);
     }
     
@@ -238,7 +237,7 @@ auto get_graver_basis(const vector<vector<int8_t>>& fsol_list_reduced, int max_g
     return g_basis_par_i;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
     ifstream fin("data/feas_sols_sorted_2.txt");
@@ -254,8 +253,8 @@ int main() {
         if (!row.empty())
             feas_solns.push_back(row);
     }
-    int n=11;
-    int max_gbasis_size=100000;
+    int n=stoi(argv[1]);
+    long long max_gbasis_size=stoll(argv[2]);
     auto gbasis = get_graver_basis(feas_solns,max_gbasis_size);
     cout << "Final g_basis size: " << gbasis.size() << " x " 
          << (gbasis.empty() ? 0 : gbasis[0].size()) << endl;
@@ -265,6 +264,7 @@ int main() {
         fout.write(reinterpret_cast<const char*>(row.data()), row.size());
     }
     cout<<"you can end this program now (if there are a lot of feas_sols the destructor for feas_sols takes very long)"<<"\n";
+    cout<<gbasis.size()<<" "<< (gbasis.empty() ? 0 : gbasis[0].size()) << endl;
     fout.close();
 
     return 0;

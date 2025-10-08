@@ -23,7 +23,7 @@ def check_possible(feas_sol,n,x,cum_demand,q,d):
                         
 
 
-def get_feasible(A, b, n, q,d,samples=20000):
+def get_feasible(A, b, n, q,d,samples=10000):
 
     AA = np.dot(A.T, A)
     h = -2.0*np.dot(b.T, A)
@@ -41,16 +41,16 @@ def get_feasible(A, b, n, q,d,samples=20000):
     filter_idx = [i for i, e in enumerate(response.record.energy) if e == 0.0]
     feas_sols = response.record.sample[filter_idx]
     feas_sols_filter=[]
-    print(len(feas_sols))
+    print("# of SA Solutions: "+str(len(feas_sols)))
     for i in feas_sols:
         visited,poss=check_possible(i,n,0,0,q,d)
         if(poss and visited==n):
             feas_sols_filter.append(i)
-    print(len(feas_sols_filter))
     feas_sols_clean=[]
     for i in feas_sols_filter:
         feas_sols_clean.append(i[:n*n+n])
     feas_sols_uniq = np.unique(feas_sols_clean, axis=0)
+    print("# of possible unique SA Solutions "+str(len(feas_sols_uniq)))
     np.savetxt('data/feas_sols_sorted_2.txt', feas_sols_uniq)
 
 

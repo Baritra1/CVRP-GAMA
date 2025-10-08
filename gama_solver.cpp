@@ -62,26 +62,26 @@ double objective_function(vector<vector<double>>& cost, vector<int8_t>& candidat
 }
 
 
-int main() {
+int main(int argc, char* argv[]) {
     vector<vector<int8_t>> feas_sols = read_matrix<int8_t>("data/feas_sols_sorted_2.txt");
     std::ifstream fin("data/graver_basis_test_2.txt", std::ios::binary);
-    std::vector<std::vector<int8_t>> g_basis(100000, std::vector<int8_t>(132));
-    for (uint64_t i = 0; i < 100000; ++i) {
-        fin.read(reinterpret_cast<char*>(g_basis[i].data()), 132);
+    std::vector<std::vector<int8_t>> g_basis(stoi(argv[2]), std::vector<int8_t>(stoi(argv[3])));
+    for (uint64_t i = 0; i < stoi(argv[2]); ++i) {
+        fin.read(reinterpret_cast<char*>(g_basis[i].data()), stoi(argv[3]));
     }
     cout<<"read\n";
     vector<vector<double>> cost = read_matrix<double>("data/cost_matrix.txt");
     cout << "Loaded feas_sols: " << feas_sols.size() << "x" << (feas_sols.empty() ? 0 : feas_sols[0].size()) << "\n";
     cout << "Loaded g_basis: " << g_basis.size() << "x" << (g_basis.empty() ? 0 : g_basis[0].size()) << "\n";
     cout << "Loaded cost: " << cost.size() << "x" << (cost.empty() ? 0 : cost[0].size()) << "\n";
-    int n=11;
+    int n=stoi(argv[1]);
     vector<int> seeds;
-    if (feas_sols.size()<1000) {
+    if (feas_sols.size()<stoi(argv[4])) {
         for (int i=0;i<feas_sols.size();i++){
             seeds.push_back(i);
         }
     } else {
-        int m=1000;
+        int m=stoi(argv[4]);
         random_device rd;
         mt19937 gen(rd());
         uniform_int_distribution<int> dist(0, feas_sols.size() - 1);
