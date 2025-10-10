@@ -10,7 +10,7 @@ import subprocess
 
 #Configure this:
 #n is # of nodes in graph
-n=10
+n=30
 #q_clamp is a constant multiplied to each random number of d[i], higher q_clamp results in a graph
 #with more feasible solutions (since there are more possible paths each car can take before it runs
 #out of capacity)
@@ -19,13 +19,23 @@ q_clamp=1
 SA_samples=10_000
 #max_gbasis_size dictates how large the partial graver basis can be, can be increased for better answers
 #but 100k is already quite good
-max_gbasis_size=100_000
+max_gbasis_size=10_000
 #only used if there are more feasible solutions than gama_num_seeds, picks number of random feasible solutions to
 #start with
 gama_num_seeds=1_000
 
 
+print("Configs:")
+print(f"n={n}")
+print(f"q_clamp={q_clamp}")
+print(f"SA_samples={SA_samples}")
+print(f"max_gbasis_size={max_gbasis_size}")
+print(f"gama_num_seeds={gama_num_seeds}")
+print()
 
+
+
+print("Output:")
 start_time=time.time()
 cost = generate_cost_matrix(n)
 np.savetxt('data/cost_matrix.txt', cost, fmt="%.4f")
@@ -46,7 +56,8 @@ print("Final g_basis size: "+g_basis_shape[0]+" x "+g_basis_shape[1])
 gbasis_time = time.time()
 print(f"graver basis computed, cumulated time: {gbasis_time-start_time}")
 result = subprocess.run(['./gama_solver',str(n),str(g_basis_shape[0]),str(g_basis_shape[1]),str(gama_num_seeds)])
-
+fin_time =time.time()
+print(f"run finished,cumulated time: {fin_time-start_time}")
 
 
 

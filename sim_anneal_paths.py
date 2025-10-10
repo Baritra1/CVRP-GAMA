@@ -2,8 +2,8 @@
 import numpy as np
 import pandas as pd
 import dimod
+import manual_sa.sampler as samplers
 import neal
-
 #check for subtours or vehicle taking more than capacity
 #this is implemented in python because computing the graver basis is more of a bottleneck than this but I 
 #could easily port to cpp if I find this starts taking too long for larger n
@@ -29,13 +29,12 @@ def get_feasible(A, b, n, q,d,samples=10000):
     h = -2.0*np.dot(b.T, A)
     Q = AA + np.diag(h)
     offset = np.dot(b.T, b) + 0.0
-    # Q*=1/1000
-    # print(Q)
     bqm_model = dimod.BinaryQuadraticModel.from_numpy_matrix(mat=Q, offset=offset)
-    simAnnSampler = neal.SimulatedAnnealingSampler()
+    simAnnSampler = samplers.SimulatedAnnealingSampler()
     sampler = simAnnSampler
     response = sampler.sample(bqm_model, num_reads=samples)
     response = response.aggregate()
+    np.set_printoptions(threshold=np.inf)
     with open("data/raw_sols.txt", "w") as f:
         f.write(str(response.record)) # Add a newline character for each item
     filter_idx = [i for i, e in enumerate(response.record.energy) if e == 0.0]

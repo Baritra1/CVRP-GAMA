@@ -9,9 +9,11 @@
                 "-g",
                 "${file}",
                 "-O3",
+                "-Iinclude",
                 "-march=native",
                 "-ffast-math",
                 "-fopenmp",
+                "-fopenmp-simd",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
             ],

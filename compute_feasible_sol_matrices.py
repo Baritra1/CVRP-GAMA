@@ -71,9 +71,9 @@ def compute_b(node_num,k,d,q):
 
 def compute_matrices(k,d,q):
     assert(d[0]==0)
+    sum=0
     for i in range(len(d)):
         assert(d[i]<=q)
-    assert(k>=len(d))
     A=compute_a(len(d),k,d,q)
     b=compute_b(len(d),k,d,q)
     return A,b
